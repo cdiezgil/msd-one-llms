@@ -2,8 +2,11 @@ from PIL import Image, ImageDraw
 from server.state import TrafficLight
 
 def generate_key_image(llm: str, color: str | TrafficLight) -> bytes:
+    # TODO: draw LLM text on image (using the 'llm' argument)
+    
     # Get string representation
     color_str = color.value if isinstance(color, TrafficLight) else color
+    color_str = color_str.upper()
     
     # Create a 72x72 square (typical macro key size, to be adjusted)
     img = Image.new('RGB', (72, 72), color='black')
