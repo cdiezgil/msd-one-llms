@@ -1,3 +1,4 @@
+import io
 from PIL import Image, ImageDraw
 from server.state import TrafficLight
 
@@ -8,8 +9,8 @@ def generate_key_image(llm: str, color: str | TrafficLight) -> bytes:
     color_str = color.value if isinstance(color, TrafficLight) else color
     color_str = color_str.upper()
     
-    # Create a 72x72 square (typical macro key size, to be adjusted)
-    img = Image.new('RGB', (72, 72), color='black')
+    # Create an 85x85 square (MSD-ONE typical size)
+    img = Image.new('RGB', (85, 85), color='black')
     draw = ImageDraw.Draw(img)
     
     # Map color string to RGB
@@ -17,7 +18,9 @@ def generate_key_image(llm: str, color: str | TrafficLight) -> bytes:
     border_color = colors.get(color_str, (128, 128, 128))
     
     # Draw border
-    draw.rectangle([0, 0, 71, 71], outline=border_color, width=4)
+    draw.rectangle([0, 0, 84, 84], outline=border_color, width=4)
     
-    # Convert to bytes (raw RGB for now, will compress later if needed)
-    return img.tobytes()
+    # Convert to JPEG bytes
+    buffer = io.BytesIO()
+    img.save(buffer, format='JPEG', quality=95, subsampling=0)
+    return buffer.getvalue()

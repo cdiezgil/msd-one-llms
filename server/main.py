@@ -9,6 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 from server.state import LLMState, calculate_traffic_light
+from server.image_gen import generate_key_image
+from hid_driver.writer import send_image
 
 app = FastAPI()
 
@@ -20,6 +22,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+KEY_MAP = {"claude": 1, "gemini": 2, "kimi": 3, "z.ai": 4}
 llm_states = {}
 
 @app.get("/health")
@@ -30,6 +33,14 @@ def health_check():
 def update_state(state: LLMState):
     llm_states[state.llm] = state
     light = calculate_traffic_light(state)
+    
+    jpeg_bytes = generate_key_image(state.llm, light)
+    key_id = KEY_MAP.get(state.llm, 1)
+    try:
+        send_image(key_id, jpeg_bytes)
+    except Exception as e:
+        print(f"Error sending image to HID: {e}")
+    
     return {"status": "updated", "light": light}
 
 if __name__ == "__main__":
