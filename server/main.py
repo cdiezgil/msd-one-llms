@@ -36,7 +36,10 @@ def update_state(state: LLMState):
     
     jpeg_bytes = generate_key_image(state.llm, light)
     key_id = KEY_MAP.get(state.llm, 1)
-    send_image(key_id, jpeg_bytes)
+    try:
+        send_image(key_id, jpeg_bytes)
+    except Exception as e:
+        print(f"Error sending image to HID: {e}")
     
     return {"status": "updated", "light": light}
 

@@ -1,5 +1,4 @@
 import hid
-import sys
 
 VID = 0x0b00
 PID = 0x1000

@@ -22,5 +22,5 @@ def generate_key_image(llm: str, color: str | TrafficLight) -> bytes:
     
     # Convert to JPEG bytes
     buffer = io.BytesIO()
-    img.save(buffer, format='JPEG')
+    img.save(buffer, format='JPEG', quality=95, subsampling=0)
     return buffer.getvalue()
