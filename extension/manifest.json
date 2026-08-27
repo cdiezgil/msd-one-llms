@@ -9,7 +9,9 @@
   "host_permissions": [
     "*://claude.ai/*",
     "*://gemini.google.com/*",
-    "http://localhost:5000/*"
+    "*://z.ai/*",
+    "*://www.kimi.ai/*",
+    "http://127.0.0.1:5001/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -18,11 +20,14 @@
     {
       "matches": [
         "*://claude.ai/*",
-        "*://gemini.google.com/*"
+        "*://gemini.google.com/*",
+        "*://z.ai/*",
+        "*://www.kimi.ai/*"
       ],
       "js": [
         "content.js"
-      ]
+      ],
+      "all_frames": true
     }
   ]
 }

@@ -47,7 +47,12 @@ def execute_double_click(llm_name, state):
     except Exception as e:
         print(f"❌ Error al dibujar dashboard: {e}")
 
-APP_KEY_MAP = {14: "Claude", 11: "Gemini", 8: "Antigravity", 5: "Ghostty"}
+APP_KEY_MAP = {
+    # Fila 2
+    14: "Claude", 11: "Gemini", 8: "Antigravity", 5: "Ghostty", 2: "Opencode", 1: "Orca",
+    # Fila 3
+    12: "Docker", 9: "Antigravity IDE", 6: "Obsidian", 3: "Spotify"
+}
 
 @app.on_event("startup")
 def startup_event():
@@ -58,7 +63,13 @@ def startup_event():
     for key_id, app_name in APP_KEY_MAP.items():
         icon_path = os.path.join("icons_apps", f"{app_name}.png")
         if os.path.exists(icon_path):
-            img = Image.open(icon_path).convert("RGB")
+            icon = Image.open(icon_path).convert("RGBA")
+            # Create the brand background color
+            bg = Image.new("RGBA", icon.size, "#0A1122")
+            # Composite the transparent icon over the background
+            bg.paste(icon, (0, 0), icon)
+            img = bg.convert("RGB")
+            
             img = img.rotate(90)
             buffer = io.BytesIO()
             img.save(buffer, format="JPEG", quality=80)
@@ -74,7 +85,7 @@ def on_key_clicked(key_id: int):
         app_name = APP_KEY_MAP[key_id]
         print(f"🚀 Lanzando app: {app_name} (Tecla {key_id})")
         if app_name == "Ghostty":
-            subprocess.Popen(["/Applications/Ghostty.app/Contents/MacOS/ghostty", "-e", "ssh cdiezgil@192.168.178.63"])
+            subprocess.Popen(["/Applications/Ghostty.app/Contents/MacOS/ghostty", "-e", "ssh", "cdiezgil@192.168.178.63"])
         else:
             subprocess.run(["open", "-a", app_name])
         return

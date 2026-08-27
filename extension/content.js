@@ -9,7 +9,8 @@ function extractRegex(text, regex, defaultValue = 0) {
 }
 
 function scrapeData() {
-    const text = document.body.innerText;
+    if (!document || !document.body) return;
+    const text = (document.body.innerText || "") + "\n" + (document.body.textContent || "");
     const hostname = window.location.hostname;
     
     let llm = '';
@@ -17,34 +18,33 @@ function scrapeData() {
     let weekly = 0;
     let monthly = 0;
 
-    if (hostname.includes('z.ai')) {
-        llm = 'z.ai';
-        // z.ai renders: "Cuota de 5 horas \n 3% De segunda mano"
-        h5 = extractRegex(text, /Cuota de 5 horas[^\d]*(\d+(?:\.\d+)?)%/i);
-        weekly = extractRegex(text, /Cuota semanal[^\d]*(\d+(?:\.\d+)?)%/i);
-        monthly = extractRegex(text, /Cuota MCP[^\d]*(\d+(?:\.\d+)?)%/i);
+    if (hostname.includes('z.ai') || hostname.includes('kimi.ai')) {
+        // Kimi / Z.ai Spanish translation
+        llm = hostname.includes('z.ai') ? 'z.ai' : 'kimi';
+        h5 = extractRegex(text, /Cuota de 5 horas[^\d]*(\d+(?:\.\d+)?)\s*%/i) || extractRegex(text, /5-hour usage[\s\S]{0,100}?(\d+(?:\.\d+)?)\s*%/i);
+        weekly = extractRegex(text, /Cuota semanal[^\d]*(\d+(?:\.\d+)?)\s*%/i) || extractRegex(text, /7-day usage[\s\S]{0,100}?(\d+(?:\.\d+)?)\s*%/i);
+        monthly = extractRegex(text, /Cuota MCP[^\d]*(\d+(?:\.\d+)?)\s*%/i) || extractRegex(text, /Total usage[\s\S]{0,100}?(\d+(?:\.\d+)?)\s*%/i);
+        
+        if (h5 === 0 && weekly === 0) {
+            console.warn(`[LLM Telemetry] ${llm.toUpperCase()} FAIL. Text extracted:`, text.substring(0, 500));
+        }
         
     } else if (hostname.includes('claude.ai')) {
         llm = 'claude';
-        // "Sesión actual ... 100% usado"
-        h5 = extractRegex(text, /Sesi[oó]n actual[\s\S]{0,100}?(\d+(?:\.\d+)?)%\s*usado/i);
-        // "Todos los modelos ... 58% usado" (Under Límites semanales)
-        weekly = extractRegex(text, /Todos los modelos[\s\S]{0,100}?(\d+(?:\.\d+)?)%\s*usado/i);
-        
-    } else if (hostname.includes('kimi.ai')) {
-        llm = 'kimi';
-        // "5-hour usage ... Code 0%"
-        h5 = extractRegex(text, /5-hour usage[\s\S]{0,100}?(\d+(?:\.\d+)?)%/i);
-        // "7-day usage ... Code 100%"
-        weekly = extractRegex(text, /7-day usage[\s\S]{0,100}?(\d+(?:\.\d+)?)%/i);
-        // "Total usage 41.05%"
-        monthly = extractRegex(text, /Total usage\s*(\d+(?:\.\d+)?)%/i);
+        h5 = extractRegex(text, /Sesi[oó]n actual[\s\S]{0,100}?(\d+(?:\.\d+)?)\s*%\s*usado/i);
+        weekly = extractRegex(text, /Todos los modelos[\s\S]{0,100}?(\d+(?:\.\d+)?)\s*%\s*usado/i);
         
     } else if (hostname.includes('gemini.google.com')) {
         llm = 'gemini';
-        // Placeholder for Gemini if it has a usage page
-        h5 = 0; 
-        weekly = 0;
+        // "Uso actual ... 0 % usado"
+        h5 = extractRegex(text, /Uso actual[\s\S]{0,100}?(\d+(?:\.\d+)?)\s*%\s*usado/i);
+        // "Límite semanal ... 0 % usado"
+        weekly = extractRegex(text, /L[íi]mite semanal[\s\S]{0,100}?(\d+(?:\.\d+)?)\s*%\s*usado/i);
+        monthly = 0; // Not provided by Gemini
+        
+        if (h5 === 0 && weekly === 0) {
+            console.warn("[LLM Telemetry] GEMINI FAIL. Raw text:", text.substring(0, 500));
+        }
     }
 
     if (llm) {
